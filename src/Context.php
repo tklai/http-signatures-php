@@ -61,6 +61,7 @@ class Context
             // $this->headers = $args['headers'];
         }
 
+        // TODO: Test input as array
         // signingKeyId specifies the key used for signing messages.
         if (isset($args['signingKeyId'])) {
             $this->signingKeyId = $args['signingKeyId'];
