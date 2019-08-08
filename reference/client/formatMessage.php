@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Takes a text/http file and creates a PSR-7 Request
+ * @param  string $refRequest   the http message as a string
+ * @param  \Nyholm\Psr7\Factory\Psr17Factory $psr17Factory PSR-17 Factory
+ * @return \Nyholm\Psr7\Request PSR-7 RequestInterface message
+ */
 function formatMessage($refRequest, $psr17Factory) {
     $refMethod = explode(' ',$refRequest[0])[0];
     $refUri = explode(' ',$refRequest[0])[1];

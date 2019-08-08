@@ -1,11 +1,10 @@
 <?php
 require __DIR__ . '/../../vendor/autoload.php';
 
-$referencePublicKey = ['Test' => file_get_contents(__DIR__ . '/../keys/Test-public.pem')];
+$referencePublicKey = file_get_contents(__DIR__ . '/../keys/Test-public.pem');
 
-$verifierContext = new \HttpSignatures\Context([
-  'keys' => $referencePublicKey
-]);
+$keyStore = new \HttpSignatures\KeyStore(['Test' => $referencePublicKey]);
+$verifier = new \HttpSignatures\Verifier($keyStore);
 
 $psr17Factory = new \Nyholm\Psr7\Factory\Psr17Factory();
 
@@ -25,9 +24,17 @@ if ( $serverRequest->getHeader('Signature') ) {
 if ( $serverRequest->getHeader('Authorization') ) {
   $body['headers']['Authorization'] = $serverRequest->getHeader('Authorization')[0];
 }
-
-$body['signatures']['Authorization'] = $verifierContext->verifier()->isAuthorized($serverRequest);
-$body['signatures']['Signature'] = $verifierContext->verifier()->isSigned($serverRequest);
+$hostHeaders = $serverRequest->getHeader('Host');
+foreach ($hostHeaders as $value) {
+    if ( ! strpos($value,':') ) {
+        $serverRequest = $serverRequest->withHeader('Host',$value);
+        break;
+    }
+}
+$body['signatures']['Authorization'] = $verifier->isAuthorized($serverRequest);
+$body['status']['Authorization'] = $verifier->getStatus($serverRequest);
+$body['signatures']['Signature'] = $verifier->isSigned($serverRequest);
+$body['status']['Signature'] = $verifier->getStatus($serverRequest);
 
 $responseBody = $psr17Factory->createStream(json_encode($body));
 $response = $psr17Factory->createResponse(200)
