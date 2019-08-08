@@ -2,20 +2,23 @@
 
 function formatMessage($refRequest, $psr17Factory) {
     $refMethod = explode(' ',$refRequest[0])[0];
+    $refUri = explode(' ',$refRequest[0])[1];
+    $refPath = explode('?',$refUri)[0];
+    if (sizeof(explode('?',$refUri)) > 1 ) {
+      $refQry = explode('?',$refUri)[1];
+    } else {
+      $refQry = false;
+    }
     $request = new Nyholm\Psr7\Request(
       explode(' ',$refRequest[0])[0],
       'http://localhost:6789'
     );
-
-    $refUri = explode(' ',$refRequest[0])[1];
-    $refPath = explode('?',$refUri)[0];
     $reqUri = $request->getUri()
         ->withPath($refPath);
-    if (sizeof(explode('?',$refUri)) > 1 ) {
-      $refQry = explode('?',$refUri)[1];
+    if ( $refQry ) {
       $reqUri = $reqUri
-        ->withQuery($refQry);
-    };
+          ->withQuery($refQry);
+    }
     $request = $request->withUri($reqUri);
     $requestBody = "";
     $lineNumber = 1;
@@ -24,8 +27,17 @@ function formatMessage($refRequest, $psr17Factory) {
       if ( $line == "" ) { break; };
       $headerName = explode(':', $line)[0];
       $headerValue = trim(explode(' ',$line,2)[1]);
-      $request = $request->withHeader($headerName,$headerValue);
+      $headers[] = [$headerName => $headerValue];
       $lineNumber++;
+    };
+    foreach ($headers as $header) {
+      foreach ($header as $name => $value) {
+        if ( $name == 'Host' ) {
+          $request = $request->withHeader($name,$value);
+        } else {
+          $request = $request->withAddedHeader($name,$value);
+        }
+      }
     };
     $lineNumber++;
     $inBody = false;
@@ -35,5 +47,6 @@ function formatMessage($refRequest, $psr17Factory) {
       $requestBody = $requestBody . $refRequest[$lineNumber];
       $lineNumber++;
     };
-    return $request->withBody($psr17Factory->createStream($requestBody));
+    $request = $request->withBody($psr17Factory->createStream($requestBody));
+    return $request;
 }
