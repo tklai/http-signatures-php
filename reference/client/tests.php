@@ -8,7 +8,7 @@ $psr18Client = new \Buzz\Client\Curl($psr17Factory);
 $refRequestFile = file(__DIR__ . '/../request.http');
 $referencePrivateKeyFile = file_get_contents(__DIR__ . '/../keys/Test-private.pem');
 $referencePrivateKey = ['Test' => $referencePrivateKeyFile];
-$referenceRequest = formatMessage($refRequestFile);
+$referenceRequest = formatMessage($refRequestFile,$psr17Factory);
 
 print "==================================================" . PHP_EOL;
 print "Signing HTTP Messages v10 Reference Implementation" . PHP_EOL;

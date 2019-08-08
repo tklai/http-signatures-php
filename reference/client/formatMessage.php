@@ -1,7 +1,6 @@
 <?php
 
-function formatMessage($refRequest) {
-    global $psr17Factory;
+function formatMessage($refRequest, $psr17Factory) {
     $refMethod = explode(' ',$refRequest[0])[0];
     $request = new Nyholm\Psr7\Request(
       explode(' ',$refRequest[0])[0],
@@ -10,10 +9,13 @@ function formatMessage($refRequest) {
 
     $refUri = explode(' ',$refRequest[0])[1];
     $refPath = explode('?',$refUri)[0];
-    $refQry = explode('?',$refUri)[1];
     $reqUri = $request->getUri()
-        ->withPath($refPath)
+        ->withPath($refPath);
+    if (sizeof(explode('?',$refUri)) > 1 ) {
+      $refQry = explode('?',$refUri)[1];
+      $reqUri = $reqUri
         ->withQuery($refQry);
+    };
     $request = $request->withUri($reqUri);
     $requestBody = "";
     $lineNumber = 1;
@@ -33,5 +35,5 @@ function formatMessage($refRequest) {
       $requestBody = $requestBody . $refRequest[$lineNumber];
       $lineNumber++;
     };
-    return $request ->withBody($psr17Factory->createStream($requestBody));
+    return $request->withBody($psr17Factory->createStream($requestBody));
 }
