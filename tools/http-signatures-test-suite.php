@@ -25,7 +25,7 @@ $contextParms = [];
 $call=implode(' ',$argv);
 $mode = $argv[0];
 $options = [];
-$options['keyId'] = 'foo';
+$options['keyId'] = 'test-key';
 array_shift($argv);
 while ( sizeof($argv) > 0 ) {
   switch ($argv[0]) {
@@ -144,6 +144,7 @@ function runTest($mode, $message, $options) {
     // ]
     $contextParms['keys']['Test'] = $options['privateKey'];
     $contextParms['algorithm'] = $options['algorithm'];
+    // if ( $options['algorithm'] == 'hs2019' ) { print "HI!!!"; }; exit;
     $defaultContext = new \HttpSignatures\Context($contextParms);
     $signedMessage = $defaultContext->signer()->sign($message);
     return $signedMessage->getHeader('Signature')[0];
@@ -155,14 +156,10 @@ function runTest($mode, $message, $options) {
       $keyStore = new \HttpSignatures\KeyStore([$options['keyId'] => $options['publicKey']]);
       $verifier = new \HttpSignatures\Verifier($keyStore);
       $result = $verifier->isAuthorized($message);
-      // $contextParms['keys']['Test'] = $options['publicKey'];
-      // $contextParms['algorithm'] = $options['algorithm'];
-      // $verifyContext = new \HttpSignatures\Context($contextParms);
-      // $result = $verifyContext->verifier->isSigned($message);
       if ( $result) {
         exit(0);
       } else {
-        throw new \Exception("keyId: '{$options['keyId']}'", 1);
+        throw new \Exception($options['keyId'] . ': ' . $message->getHeader('Authorization')[0] . $options['publicKey'], 1);
 
         exit(5);
       }
