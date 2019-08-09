@@ -41,9 +41,7 @@ This type of signature uses a secret key known to you and the verifier.
 
 .. code-block:: php
 
-  use HttpSignatures\Context;
-
-  $context = new HttpSignatures\Context([
+  $context = new \HttpSignatures\Context([
     'keys' => ['key12' => 'your-secret-here'],
     'algorithm' => 'hmac-sha256',
     'headers' => ['(request-target)', 'Content-Type'],
@@ -61,30 +59,35 @@ The key file is assumed to be an unencrypted private key in PEM format.
 
 .. code-block:: php
 
-  use HttpSignatures\Context;
-
-  $context = new Context([
-    'keys' => ['key43' => file_get_contents('/path/to/privatekeyfile')],
+  $context = new \HttpSignatures\Context([
+    'keys' => ['key12' => file_get_contents('/path/to/privatekeyfile')],
     'algorithm' => 'rsa-sha256',
-    'headers' => ['(request-target)', 'Date', 'Accept'],
+    'headers' => ['(request-target)', 'Date', 'Accept']
   ]);
 
 Signing the Message:
 ---------------------
 
+With your PSR-7 compliant message in ``$message``:
+
 .. code-block:: php
 
   $context->signer()->sign($message);
 
-Now `$message` contains the ``Signature`` header:
+Now ``$message`` contains the ``Signature`` header:
 
 .. code-block:: php
 
-  $message->headers->get('Signature');
-  // keyId="examplekey",algorithm="hmac-sha256",headers="...",signature="..."
+  print $message->getHeader('Signature')[0];
+  // keyId="key12",algorithm="<yourAlgorithm>",headers="...",signature="..."
 
-..  $message->headers->get('Authorization');
-  // Signature keyId="examplekey",algorithm="hmac-sha256",headers="...",signature="..."
+There is a similar function to add the ``Authorization: Signature`` header:
+
+.. code-block:: php
+
+  $context->signer()->sign($message);
+  print $message->->getHeader('Authorization')[0];
+  // Signature keyId="key12",algorithm="<yourAlgorithm>",headers="...",signature="..."
 
 Adding a Digest header while signing
 -------------------------------------
@@ -112,18 +115,21 @@ Verifying a HMAC signed message
 -------------------------------------
 
 A message signed with an hmac signature is verified using the same key as
-the one used to sign the original message:
+the one used to sign the original message. Since multiple signatures may
+come from multiple keys, the verifier can take an array of known keys
+and will match the id of the key provided with the ``keyId`` parameter in
+the received message header.
 
 .. code-block:: php
 
-  use HttpSignatures\Context;
-
-  $context = new HttpSignatures\Context([
-    'keys' => ['key300' => 'some-other-secret',
-                'key12' => 'secret-here']
+  $verifier = new \HttpSignatures\Verifier([
+    'key300' => 'some-other-secret',
+    'key12' => 'your-secret-here'
   ]);
 
-  $context->verifier()->isSigned($message); // true or false
+  $verifier->isSigned($message); // true or false
+  // OR
+  $verifier->isAuthorized($message); // true or false
 
 
 Verifying a RSA signed message
@@ -135,33 +141,34 @@ the X.509 PEM format certificates in place of the 'secret':
 
 .. code-block:: php
 
-  use HttpSignatures\Context;
-
-  $context = new HttpSignatures\Context([
-    'keys' => ['key43' => file_get_contents('/path/to/certificate'),
-               'key87' => $someOtherCertificate],
-  $context->verifier()->isSigned($message); // true or false
+  $verifier = new \HttpSignatures\Verifier([
+    'key12' => file_get_contents('/path/to/certificate'),
+    'key87' => $someOtherCertificate
   ]);
+
+  $verifier->isSigned($message); // true or false
+  // OR
+  $verifier->isAuthorized($message); // true or false
 
 
 Verifying a message digest
 -------------------------------------
 
 To confirm the body has a valid digest header and the header is a valid digest
-of the message body:
+of the message body, use the ``$verifier`` from above:
 
 .. code-block:: php
 
-  $context->verifier()->isValidDigest($message); // true or false
-
+  $verifier->isValidDigest($message); // true or false
 
 An all-in-one validation that the signature includes the digest, and the digest
 is valid for the message body:
 
-
 .. code-block:: php
 
-  $context->verifier()->isSignedWithDigest($message); // true or false
+  $verifier->isSignedWithDigest($message); // true or false
+  // OR
+  $verifier->isAuthorizedWithDigest($message); // true or false
 
 
 Symfony compatibility
