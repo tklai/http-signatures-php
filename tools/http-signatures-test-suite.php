@@ -24,37 +24,87 @@ $msgIn = explode("\n",$input);
 $contextParms = [];
 $call=implode(' ',$argv);
 $mode = $argv[0];
+$options = [];
+$options['keyId'] = 'foo';
 array_shift($argv);
-// switch ($mode) {
-//   case 'c14n':
 while ( sizeof($argv) > 0 ) {
-  // print $argv[0] . PHP_EOL;
   switch ($argv[0]) {
     case '--headers':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['headers'] = explode(' ',$argv[1]);
-        if ( $options['headers'] == "" ) {
-          $options['headers'] = false;
-        }
+        $headerAttribute = $argv[1];
+        if ( $headerAttribute == "" ) {
+          $options['headers'] = [];
+        } else {
+          $options['headers'] = explode(' ',$argv[1]);
+        // }
+        // if (sizeof($headerList) == 0) {
+        //   $options['headers'] = [];
+        // } else {
+        //   $options['headers'] = $headerList;
+        };
+        // $options['headers'] = explode(' ',$argv[1]);
+        // if ( $options['headers'] == "" ) {
+        //   $options['headers'] = false;
+        // }
         array_shift($argv);
       } else {
-        $options['headers'] = null;
+        $options['headers'] = [];
       };
       break;
 
     case '--private-key':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $privateKey = file_get_contents($argv[1]);
+        $options['privateKey'] = file_get_contents($argv[1]);
       } else {
-        print "No vaue provided for parameter --private-key"; exit(3);
+        print "No value provided for parameter --private-key"; exit(3);
+      };
+      break;
+
+    case '--public-key':
+      if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $options['publicKey'] = file_get_contents($argv[1]);
+      } else {
+        print "No value provided for parameter --public-key"; exit(3);
       };
       break;
 
     case '--algorithm':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['algorithm'] == $argv[1];
+        $options['algorithm'] = $argv[1];
       } else {
-        print "No vaue provided for parameter --private-key"; exit(3);
+        print "No value provided for parameter --algorithm"; exit(3);
+      };
+      break;
+
+    case '--key-type':
+      if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $options['keyType'] = $argv[1];
+      } else {
+        print "No value provided for parameter --key-type"; exit(3);
+      };
+      break;
+
+    case '--keyId':
+      if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $options['keyId'] = $argv[1];
+      } else {
+        print "No value provided for parameter --keyId"; exit(3);
+      };
+      break;
+
+    case '--created':
+      if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $options['created'] = $argv[1];
+      } else {
+        print "No value provided for parameter --created"; exit(3);
+      };
+      break;
+
+    case '--expires':
+      if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $options['expires'] = $argv[1];
+      } else {
+        print "No value provided for parameter --expires"; exit(3);
       };
       break;
 
@@ -92,7 +142,7 @@ function runTest($mode, $message, $options) {
     //     'algorithm' => 'rsa-sha256',
     //     'headers' => self::basicTestHeaders,
     // ]
-    $contextParms['keys']['Test'] = $privateKey;
+    $contextParms['keys']['Test'] = $options['privateKey'];
     $contextParms['algorithm'] = $options['algorithm'];
     $defaultContext = new \HttpSignatures\Context($contextParms);
     $signedMessage = $defaultContext->signer()->sign($message);
@@ -102,7 +152,20 @@ function runTest($mode, $message, $options) {
       break;
 
     case 'verify':
-      print "Not yet implemented"; exit(2);
+      $keyStore = new \HttpSignatures\KeyStore([$options['keyId'] => $options['publicKey']]);
+      $verifier = new \HttpSignatures\Verifier($keyStore);
+      $result = $verifier->isAuthorized($message);
+      // $contextParms['keys']['Test'] = $options['publicKey'];
+      // $contextParms['algorithm'] = $options['algorithm'];
+      // $verifyContext = new \HttpSignatures\Context($contextParms);
+      // $result = $verifyContext->verifier->isSigned($message);
+      if ( $result) {
+        exit(0);
+      } else {
+        throw new \Exception("keyId: '{$options['keyId']}'", 1);
+
+        exit(5);
+      }
       break;
     default:
       print "Unknown mode $mode"; exit(2);
@@ -110,6 +173,6 @@ function runTest($mode, $message, $options) {
     };
 };
 
-$result = runTest($mode, $message, $options, $privateKey);
+$result = runTest($mode, $message, $options, $headerAttribute);
 file_put_contents('./return/' . $fileName,$result);
 print $result;
