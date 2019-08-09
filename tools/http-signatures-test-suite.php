@@ -120,7 +120,7 @@ $message = formatMessage($msgIn, $psr17Factory);
 function runTest($mode, $message, $options) {
   global $privateKey;
   switch ($mode) {
-    case 'c14n':
+    case 'canonicalize':
 
       // try {
       //   $result = $ss->string();
