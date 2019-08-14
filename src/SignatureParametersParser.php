@@ -91,7 +91,7 @@ class SignatureParametersParser
      */
     private function validate($result)
     {
-        $this->validateAllKeysArePresent($result);
+        $this->validateRequiredKeysArePresent($result);
     }
 
     /**
@@ -99,7 +99,7 @@ class SignatureParametersParser
      *
      * @throws SignatureParseException
      */
-    private function validateAllKeysArePresent($result)
+    private function validateRequiredKeysArePresent($result)
     {
         // Regexp in pair() ensures no unwanted keys exist.
         // Ensure that all mandatory keys exist.
