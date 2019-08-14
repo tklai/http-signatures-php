@@ -104,6 +104,9 @@ class Context
     private function keyStore()
     {
         if (empty($this->keyStore)) {
+            if (is_null($this->keys)) {
+                return null;
+            }
             $this->keyStore = new KeyStore($this->keys);
         }
 
