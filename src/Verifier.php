@@ -17,9 +17,12 @@ class Verifier
     /**
      * @param KeyStoreInterface $keyStore
      */
-    public function __construct(KeyStoreInterface $keyStore)
+    public function __construct(KeyStoreInterface $keyStore = null, $minimumHeaders = [])
     {
+        // if ( $keyStore ) {
         $this->keyStore = $keyStore;
+        // };
+        $this->minimumHeaders = $minimumHeaders;
         $this->status = [];
     }
 
@@ -30,6 +33,11 @@ class Verifier
      */
     public function isSigned($message)
     {
+        if (is_null($this->keyStore)) {
+            $this->status[] = 'No keys provided, cannot verify';
+
+            return false;
+        }
         $this->status = [];
         try {
             $verification = new Verification($message, $this->keyStore, 'Signature');
@@ -183,5 +191,37 @@ class Verifier
     public function getStatus()
     {
         return $this->status;
+    }
+
+    public function getSignatureParameters($message)
+    {
+        $signatureLine = $message->getHeader('Signature')[0];
+        $signatureParametersParser = new SignatureParametersParser(
+            $signatureLine
+        );
+
+        return $signatureParametersParser->parse();
+    }
+
+    public function getSignatureHeaders($message, $parameter)
+    {
+        $parameters = $this->getSignatureParameters($message);
+        if (!isset($parameters['headers'])) {
+            return ['date'];
+        }
+        $headers = explode(' ', $parameters['headers']);
+
+        return $headers;
+    }
+
+    public function withMinimumHeaders(array $minimumHeaders)
+    {
+        $this->minimumHeaders = $minimumHeaders;
+    }
+
+    public function withKeys($keys = [])
+    {
+        return $this;
+        // TODO: Add keys to keystore
     }
 }
