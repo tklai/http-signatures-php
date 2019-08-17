@@ -186,5 +186,4 @@ class VerifierContextTest extends TestCase
         $verifier = $context->verifier();
         $this->assertTrue($verifier->isSigned($this->signedMessage));
     }
-
 }
