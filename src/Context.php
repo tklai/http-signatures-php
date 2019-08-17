@@ -21,7 +21,7 @@ class Context
      *
      * @throws Exception
      */
-    public function __construct($args)
+    public function __construct($args = null)
     {
         if (isset($args['keys']) && isset($args['keyStore'])) {
             throw new Exception(__CLASS__.' accepts keys or keyStore but not both');
@@ -124,5 +124,17 @@ class Context
     private function algorithm()
     {
         return $this->algorithm;
+    }
+
+    public function addKeys($keys)
+    {
+        foreach ($keys as $keyId => $keyValue) {
+            $newKey = new Key($keyId, $keyValue);
+            $newKeys[$keyId] = $keyValue;
+        }
+        if (empty($this->keyStore)) {
+            $this->keyStore = new KeyStore();
+        }
+        $this->keyStore = $this->keyStore->withKeys($newKeys);
     }
 }

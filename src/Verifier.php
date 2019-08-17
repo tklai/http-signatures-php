@@ -91,6 +91,11 @@ class Verifier
      */
     public function isAuthorized($message)
     {
+        if (is_null($this->keyStore)) {
+            $this->status[] = 'No keys provided, cannot verify';
+
+            return false;
+        }
         $this->status = [];
         try {
             $verification = new Verification($message, $this->keyStore, 'Authorization');
@@ -203,6 +208,11 @@ class Verifier
         return $signatureParametersParser->parse();
     }
 
+    public function getSignatureKeyId($message)
+    {
+        return $this->getSignatureParameters($message)['keyId'];
+    }
+
     public function getSignatureHeaders($message, $parameter)
     {
         $parameters = $this->getSignatureParameters($message);
@@ -214,14 +224,13 @@ class Verifier
         return $headers;
     }
 
-    public function withMinimumHeaders(array $minimumHeaders)
+    public function setMinimumHeaders(array $minimumHeaders)
     {
         $this->minimumHeaders = $minimumHeaders;
     }
 
-    public function withKeys($keys = [])
+    public function getMinimumHeaders()
     {
-        return $this;
-        // TODO: Add keys to keystore
+        return $this->minimumHeaders;
     }
 }
