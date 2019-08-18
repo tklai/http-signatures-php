@@ -5,6 +5,12 @@ require __DIR__ . '/../reference/client/formatMessage.php';
 // use \HTTPSignatures\Context;
 use HttpSignatures\SigningString;
 use HttpSignatures\HeaderList;
+// if (file_exists('./invocations.json')) {
+//   $invocations = json_decode(file_get_contents('./invocations.json'));
+// } else {
+//   $invocations->count = 1;
+// };
+
 $psr17Factory = new \Nyholm\Psr7\Factory\Psr17Factory();
 $allArgs = $argv;
 $privateKey = 'not-a-secret';
@@ -115,6 +121,29 @@ while ( sizeof($argv) > 0 ) {
   array_shift($argv);
 };
 $message = formatMessage($msgIn, $psr17Factory);
+$hosts = $message->getHeader('Host');
+$message = $message->withoutHeader('Host');
+foreach ($hosts as $host) {
+  if ($host != 'localhost:6789') {
+    $message = $message->withAddedHeader('Host',$host);
+  }
+};
+$dates = $message->getHeader('Date');
+while (sizeof($dates) > 1) {
+  array_shift($dates);
+};
+if (sizeof($dates)) {
+  $message = $message->withHeader('Date',$dates[0]);
+}
+$body = explode("\n",(string)$message->getBody());
+if (substr($body[0],0,6) == 'Date: ') {
+  $message = $message->withHeader('Date',substr($body[0],6));
+  array_shift($body);
+  array_shift($body);
+  $body=implode("\n",$body);
+  $message = $message->withBody($psr17Factory->createStream($body));
+}
+// var_dump(['input' => $input,'dates' => $message->getHeader('Date'),'body' => $body]); exit;
 // $headerList = new HeaderList($headers);
 // $ss = new SigningString($headerList, $message);
 function runTest($mode, $message, $options) {
@@ -122,13 +151,8 @@ function runTest($mode, $message, $options) {
   switch ($mode) {
     case 'canonicalize':
 
-      // try {
-      //   $result = $ss->string();
-      // } catch (\Exception $e) {
-      //   var_dump([$msgIn, $allArgs]); exit(1);
-      // }
       $ssContextParms['keys']['Test'] = $privateKey;
-      $ssContextParms['algorithm'] = 'hmac-sha256';
+      // $ssContextParms['algorithm'] = 'hmac-sha256';
       $ssContextParms['headers'] = $options['headers'];
       $ssContext = new \HttpSignatures\Context($ssContextParms);
       $signingString = $ssContext->signer()->getSigningString($message);
@@ -137,11 +161,6 @@ function runTest($mode, $message, $options) {
       break;
 
     case 'sign':
-    // [
-    //     'keys' => ['Test' => self::referencePrivateKey],
-    //     'algorithm' => 'rsa-sha256',
-    //     'headers' => self::basicTestHeaders,
-    // ]
     $contextParms['keys']['Test'] = $options['privateKey'];
     $contextParms['algorithm'] = $options['algorithm'];
     // if ( $options['algorithm'] == 'hs2019' ) { print "HI!!!"; }; exit;
