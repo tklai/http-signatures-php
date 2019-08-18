@@ -21,7 +21,7 @@ class Context
      *
      * @throws Exception
      */
-    public function __construct($args)
+    public function __construct($args = [])
     {
         if (isset($args['keys']) && isset($args['keyStore'])) {
             throw new Exception(__CLASS__.' accepts keys or keyStore but not both');
