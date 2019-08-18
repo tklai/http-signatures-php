@@ -28,11 +28,17 @@ function formatMessage($refRequest, $psr17Factory) {
     $request = $request->withUri($reqUri);
     $requestBody = "";
     $lineNumber = 1;
+    $headers = [];
     while ( $lineNumber < sizeof($refRequest) ) {
       $line = trim($refRequest[$lineNumber]);
       if ( $line == "" ) { break; };
-      $headerName = explode(':', $line)[0];
-      $headerValue = trim(explode(' ',$line,2)[1]);
+      $headerParts = explode(':', $line, 2);
+      $headerName = trim($headerParts[0]);
+      if (sizeof($headerParts) == 2) {
+        $headerValue = trim($headerParts[1]);
+      } else {
+        $headerValue = '';
+      };
       $headers[] = [$headerName => $headerValue];
       $lineNumber++;
     };
