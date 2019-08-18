@@ -33,4 +33,24 @@ class KeyStore implements KeyStoreInterface
             throw new KeyStoreException("Key '$keyId' not found");
         }
     }
+
+    public function count()
+    {
+        return sizeof($this->keys);
+    }
+
+    public function addKeys($keys)
+    {
+        $newKeys = [];
+        foreach ($keys as $id => $key) {
+            if (isset($this->keys[$id])) {
+                throw new KeyStoreException(
+                "keyId '$id' already in Key Store", 1
+              );
+            } else {
+                $newKeys[$id] = new Key($id, $key);
+            }
+        }
+        $this->keys = array_merge($newKeys, $this->keys);
+    }
 }
