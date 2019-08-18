@@ -4,22 +4,17 @@
 [![Documentation Status](https://readthedocs.org/projects/http-signatures-php/badge/?version=latest)](https://http-signatures-php.readthedocs.io/en/latest/?badge=latest)
 
 PHP implementation of [Singing HTTP Messages][draft10] draft specification;
-allowing cryptographic signing and verifying of [PSR-7 messages][psr7].
-
-<!-- See also:
-
-* https://github.com/99designs/http-signatures-guzzlehttp
-* https://github.com/99designs/http-signatures-ruby
--->
-
+allowing cryptographic signing and verifying of HTTP messages using PHP
+[PSR-7][psr7] interfaces.
 
 ## Features
 
-- Sign HTTP Messages according to [Signing HTTP Message draft IETF RFC version 10][draft10]
+- Full compliance with [Signing HTTP Message draft IETF RFC version 10][draft10]
 - Sign & verify messages using HMACs
-- Sign & verify messages with RSA private/public keys
+- Sign & verify messages with RSA, Elliptic Curve and DSA private/public keys
 - Add a ``Digest`` header, or automatically add the header while signing in a single operation
 - Verify a ``Digest`` header while verifying the signature
+- Compatible with common PSR-7 libraries
 
 Complete documentation for this library can be found at 
 [Read The Docs](https://http-signatures-php.readthedocs.io/en/latest/)
@@ -34,18 +29,17 @@ Add [liamdennehy/http-signatures-php][package] to your [``composer.json``][compo
 * The ``signWithDigest`` function witll add a ``Digest`` header and digitally
   sign the message in a new ``Signature`` header.
 
-Using an PSR-7 request ``$message`` ready to send:
+Using an PSR-7 request ``$message`` ready to send (assuming it has a ``Date``
+header):
 
 ```php
-  use HttpSignatures\Context;
-
-  $context = new HttpSignatures\Context([
-    'keys' => ['mykey' => file_get_contents('/path/to/privatekeyfile')],
-    'algorithm' => 'rsa-sha256',
+  $signingContext = new \HttpSignatures\Context([
+    'keys' => ['myKeyId' => file_get_contents('/path/to/secret-key')],
+    'algorithm' => 'hmac-sha256',
     'headers' => ['(request-target)', 'Date'],
   ]);
 
-  $context->signer()->signWithDigest($message);
+  $signingContext->signer()->signWithDigest($message);
 ```
 
 ## Contributing

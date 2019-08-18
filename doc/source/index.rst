@@ -14,6 +14,9 @@ PHP implementation of `Signing HTTP Messages
 allowing cryptographic signing and verifying of 
 `PHP PSR-7 messages <http://www.php-fig.org/psr/psr-7/>`_.
 
+Version 10.x of this library implements all features of requirements of
+version 10 of the RFC.
+
 
 .. Indices and tables
   ==================

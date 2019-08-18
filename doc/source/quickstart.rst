@@ -41,12 +41,11 @@ This type of signature uses a secret key known to you and the verifier.
 
 .. code-block:: php
 
-  $context = new \HttpSignatures\Context([
-    'keys' => ['key12' => 'your-secret-here'],
+  $signingContext = new \HttpSignatures\Context([
+    'keys' => ['key12' => file_get_contents('/path/to/secret-key')],
     'algorithm' => 'hmac-sha256',
-    'headers' => ['(request-target)', 'Content-Type'],
+    'headers' => ['(request-target)', 'Date'],
   ]);
-
 
 Private Key Context (RSA)
 ---------------------------
@@ -59,10 +58,10 @@ The key file is assumed to be an unencrypted private key in PEM format.
 
 .. code-block:: php
 
-  $context = new \HttpSignatures\Context([
-    'keys' => ['key12' => file_get_contents('/path/to/privatekeyfile')],
+  $signingContext = new \HttpSignatures\Context([
+    'keys' => ['key12' => file_get_contents('/path/to/privatekey.pem')],
     'algorithm' => 'rsa-sha256',
-    'headers' => ['(request-target)', 'Date', 'Accept']
+    'headers' => ['(request-target)', 'Date']
   ]);
 
 Signing the Message:
@@ -72,7 +71,7 @@ With your PSR-7 compliant message in ``$message``:
 
 .. code-block:: php
 
-  $context->signer()->sign($message);
+  $signingContext->signer()->sign($message);
 
 Now ``$message`` contains the ``Signature`` header:
 
@@ -85,8 +84,9 @@ There is a similar function to add the ``Authorization: Signature`` header:
 
 .. code-block:: php
 
-  $context->signer()->sign($message);
-  print $message->->getHeader('Authorization')[0];
+  $signingContext->signer()->authorize($message);
+ 
+  print $message->getHeader('Authorization')[0];
   // Signature keyId="key12",algorithm="<yourAlgorithm>",headers="...",signature="..."
 
 Adding a Digest header while signing
@@ -97,8 +97,9 @@ payload (body) of the message in addition to the request-target and headers:
 
 .. code-block:: php
 
-  $context->signer()->signWithDigest($message);
-  $message->headers->get('digest');
+  $signingContext->signer()->signWithDigest($message);
+  
+  $message->headers->getHeader('Digest')[0];
   // SHA-256=<base64SHA256Digest>
 
 Verifying a Signed Message
