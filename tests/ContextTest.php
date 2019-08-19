@@ -38,7 +38,7 @@ class ContextTest extends TestCase
         $message = $this->signingContext->signer()->sign($this->message);
     }
 
-    public function testDefaultContext()
+    public function testDefaultSigningContext()
     {
         $defaultContext = new Context();
         $defaultContext->addKeys($this->signingKeySpec);
@@ -58,7 +58,7 @@ class ContextTest extends TestCase
         );
     }
 
-    public function testDefaultSigner()
+    public function testv10Signer()
     {
         $this->signingContext->addKeys($this->signingKeySpec);
         $signer = $this->signingContext->signer();
@@ -84,6 +84,17 @@ class ContextTest extends TestCase
             $expectedSignatureLine,
             $signedMessage->getHeader('Signature')[0]
         );
+    }
+
+    public function testMismatchedAlgorithms()
+    {
+        $badContext = new Context([
+          'headers' => ['(request-target)', 'date'],
+          'algorithm' => 'dsa-sha256',
+          'keys' => ['mismatched-key' => TestKeys::rsaPrivateKey],
+        ]);
+        $this->expectException(ContextException::class);
+        $badContext->signer()->sign($this->message);
     }
 
     // public function testSha256Signer()
