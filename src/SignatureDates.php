@@ -105,16 +105,20 @@ class SignatureDates
         }
     }
 
-    public static function Offset($value)
+    public static function Offset($value, $start = null)
     {
         if ('now' == $value) {
             return time();
         } elseif ('none' == $value) {
             return null;
-        } elseif ('+' == substr($value, 0, 1)) {
-            return time() + substr($value, 1);
+        }
+        if (empty($start)) {
+            $start = time();
+        }
+        if ('+' == substr($value, 0, 1)) {
+            return $start + substr($value, 1);
         } elseif ('-' == substr($value, 0, 1)) {
-            return time() - substr($value, 1);
+            return $start - substr($value, 1);
         } else {
             return $value;
         }

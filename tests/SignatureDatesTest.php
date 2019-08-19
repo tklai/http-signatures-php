@@ -106,6 +106,14 @@ class SignatureDatesTest extends TestCase
           SignatureDates::Offset('-45')
         );
         $this->assertEquals(
+          1566139030,
+          SignatureDates::Offset('+30', 1566139000)
+        );
+        $this->assertEquals(
+          1566138955,
+          SignatureDates::Offset('-45', 1566139000)
+        );
+        $this->assertEquals(
           1566139000,
           SignatureDates::Offset(1566139000)
         );
