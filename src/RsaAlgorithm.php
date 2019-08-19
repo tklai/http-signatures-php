@@ -12,7 +12,7 @@ class RsaAlgorithm implements AlgorithmInterface
      */
     public function __construct($digestName)
     {
-        if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512'])) {
+        if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512', 'hs2019'])) {
             $this->digestName = $digestName;
         } else {
             throw new AlgorithmException($digestName.' is not a supported hash format');
@@ -24,7 +24,11 @@ class RsaAlgorithm implements AlgorithmInterface
      */
     public function name()
     {
-        return sprintf('rsa-%s', $this->digestName);
+        if (in_array($this->digestName, ['hs2019'])) {
+            return $this->digestName;
+        } else {
+            return 'rsa-'.$this->digestName;
+        }
     }
 
     /**
@@ -57,6 +61,7 @@ class RsaAlgorithm implements AlgorithmInterface
     private function getRsaHashAlgo($digestName)
     {
         switch ($digestName) {
+        case 'hs2019':
         case 'sha512':
             return OPENSSL_ALGO_SHA512;
         case 'sha384':

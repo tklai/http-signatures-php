@@ -12,7 +12,7 @@ class HmacAlgorithm implements AlgorithmInterface
      */
     public function __construct($digestName)
     {
-        if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512'])) {
+        if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512', 'hs2019'])) {
             $this->digestName = $digestName;
         } else {
             throw new AlgorithmException($digestName.' is not a supported hash format');
@@ -24,7 +24,11 @@ class HmacAlgorithm implements AlgorithmInterface
      */
     public function name()
     {
-        return sprintf('hmac-%s', $this->digestName);
+        if (in_array($this->digestName, ['hs2019'])) {
+            return $this->digestName;
+        } else {
+            return 'hmac-'.$this->digestName;
+        }
     }
 
     /**
