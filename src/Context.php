@@ -49,10 +49,10 @@ class Context
         }
 
         // TODO: Read headers as minimum for verification
-        // TODO: Function to set headers after creation
         // headers list for signing; not necessary for verifying.
         if (isset($args['headers'])) {
-            $this->headers = $args['headers'];
+            $this->setHeaders($args['headers']);
+            // $this->headers = $args['headers'];
         }
 
         // signingKeyId specifies the key used for signing messages.
@@ -278,7 +278,9 @@ class Context
 
     public function setHeaders($headers)
     {
-        if (is_array($headers)) {
+        if (empty($headers)) {
+            $this->headers = [];
+        } elseif (is_array($headers)) {
             $this->headers = $headers;
         } else {
             $this->headers = explode(' ', $headers);

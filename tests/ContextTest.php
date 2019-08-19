@@ -228,6 +228,17 @@ class ContextTest extends TestCase
           ]);
     }
 
+    public function testEmptyHeaders()
+    {
+        $defaultContext = new Context();
+        $defaultContext->addKeys($this->signingKeySpec);
+        $defaultContext->setHeaders([]);
+        $this->assertEquals(
+          '',
+          $defaultContext->signer()->getSigningString($this->message)
+        );
+    }
+
     public function testRejectCreatedInFuture()
     {
         $defaultContext = new Context();
