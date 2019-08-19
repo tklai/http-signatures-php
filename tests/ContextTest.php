@@ -38,6 +38,26 @@ class ContextTest extends TestCase
         $message = $this->signingContext->signer()->sign($this->message);
     }
 
+    public function testDefaultContext()
+    {
+        $defaultContext = new Context();
+        $defaultContext->addKeys($this->signingKeySpec);
+        $signedMessage = $defaultContext->signer()->sign($this->message);
+        $expectedSignatureLine =
+            'keyId="rsa1",'.
+            'algorithm="hs2019",'.
+            'signature="FM2pgp2riAJ8DYbkkHlxpBAYlsBwn7ItF8NZMhPIHeK3k7fgig4i'.
+            'XZ4WMTrUg97FhzXYOV2mecJz2787vGZ7fmAvhKEyolqZB/TyiTzDWu0WV0+vmEC'.
+            'wGNzfEcoSLLfKEtaG09m3sfSwSkWV/ij4imZmgfbvnxkTM+J9MYQOgqdwyjus6f'.
+            'fSbZmuA8P+3dnm79lost5fpjHbtaTpiIU2T7XZ4xhACy0JrxSBstA9ix52+opdR'.
+            '7PsIUO5r9JwtUFF/r8KObe0TAjCWCAxuolu4ThU5QncHdB5jEtTzTPxR0YYCC/V'.
+            'XE31TLPKkSdcB6RpzBeRTzWjQm5Yk9i3uz2cNw=="';
+        $this->assertEquals(
+            $expectedSignatureLine,
+            $signedMessage->getHeader('Signature')[0]
+        );
+    }
+
     public function testDefaultSigner()
     {
         $this->signingContext->addKeys($this->signingKeySpec);
