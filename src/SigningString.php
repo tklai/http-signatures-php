@@ -54,8 +54,16 @@ class SigningString
      */
     private function line($name)
     {
-        if ('(request-target)' == $name) {
+        if (preg_match('/^\(.*\)$/', $name)) {
+            switch ($name) {
+            case '(request-target)':
             return $this->requestTargetLine();
+              break;
+
+            default:
+              throw new HeaderException("Special header '$name' not understood", 1);
+              break;
+          }
         } else {
             return sprintf('%s: %s', $name, $this->headerValue($name));
         }
