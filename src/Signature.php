@@ -21,11 +21,11 @@ class Signature
      * @param AlgorithmInterface $algorithm
      * @param HeaderList         $headerList
      */
-    public function __construct($message, Key $key, AlgorithmInterface $algorithm, HeaderList $headerList)
+    public function __construct($message, Key $key, AlgorithmInterface $algorithm, HeaderList $headerList, $signatureDates = null)
     {
         $this->key = $key;
         $this->algorithm = $algorithm;
-        $this->signingString = new SigningString($headerList, $message);
+        $this->signingString = new SigningString($headerList, $message, $signatureDates);
     }
 
     public function string()
