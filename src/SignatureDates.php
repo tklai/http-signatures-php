@@ -104,4 +104,19 @@ class SignatureDates
             return  $this->expires - time();
         }
     }
+
+    public static function Offset($value)
+    {
+        if ('now' == $value) {
+            return time();
+        } elseif ('none' == $value) {
+            return null;
+        } elseif ('+' == substr($value, 0, 1)) {
+            return time() + substr($value, 1);
+        } elseif ('-' == substr($value, 0, 1)) {
+            return time() - substr($value, 1);
+        } else {
+            return $value;
+        }
+    }
 }

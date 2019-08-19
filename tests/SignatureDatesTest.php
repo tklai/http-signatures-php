@@ -86,4 +86,28 @@ class SignatureDatesTest extends TestCase
           $signatureDates->toExpire() <= 20
         );
     }
+
+    public function testOffset()
+    {
+        $this->assertEquals(
+          time(),
+          SignatureDates::Offset('now')
+        );
+        $this->assertEquals(
+          null,
+          SignatureDates::Offset('none')
+        );
+        $this->assertEquals(
+          time() + 30,
+          SignatureDates::Offset('+30')
+        );
+        $this->assertEquals(
+          time() - 45,
+          SignatureDates::Offset('-45')
+        );
+        $this->assertEquals(
+          1566139000,
+          SignatureDates::Offset(1566139000)
+        );
+    }
 }
