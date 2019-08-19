@@ -39,6 +39,25 @@ class HmacAlgorithm implements AlgorithmInterface
      */
     public function sign($secret, $data)
     {
-        return hash_hmac($this->digestName, $data, $secret, true);
+        switch ($this->digestName) {
+          case 'hs2019':
+          case 'sha512':
+            $digest = 'sha512';
+            break;
+          case 'sha384':
+            $digest = 'sha384';
+            break;
+          case 'sha256':
+            $digest = 'sha256';
+            break;
+          case 'sha1':
+            $digest = 'sha1';
+            break;
+          default:
+            throw new AlgorithmException($digestName.' is not a supported hash format');
+            break;
+        }
+
+        return hash_hmac($digest, $data, $secret, true);
     }
 }
