@@ -22,6 +22,6 @@ class HeaderListTest extends TestCase
     public function testList()
     {
         $hl = HeaderList::fromString('(request-target) Accept');
-        $this->assertEquals(['(request-target)', 'accept'], $hl->list());
+        $this->assertEquals(['(request-target)', 'accept'], $hl->listHeaders());
     }
 }

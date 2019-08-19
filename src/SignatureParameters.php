@@ -39,7 +39,7 @@ class SignatureParameters
             if (!empty($this->signatureDates)) {
                 if (in_array(
                   '(created)',
-                  $this->headerList->list()
+                  $this->headerList->listHeaders()
                 ) &&
                   !empty($this->signatureDates->getCreated())
                 ) {
@@ -47,7 +47,7 @@ class SignatureParameters
                 }
                 if (in_array(
                   '(expires)',
-                  $this->headerList->list()
+                  $this->headerList->listHeaders()
                 ) &&
                   !empty($this->signatureDates->getExpires())
                 ) {
