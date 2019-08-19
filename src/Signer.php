@@ -20,11 +20,12 @@ class Signer
      * @param HmacAlgorithm $algorithm
      * @param HeaderList    $headerList
      */
-    public function __construct($key, $algorithm, $headerList)
+    public function __construct($key, $algorithm, $headerList, $signatureDates = null)
     {
         $this->key = $key;
         $this->algorithm = $algorithm;
         $this->headerList = $headerList;
+        $this->signatureDates = $signatureDates;
     }
 
     /**
@@ -90,7 +91,8 @@ class Signer
             $this->key,
             $this->algorithm,
             $this->headerList,
-            $this->signature($message)
+            $this->signature($message),
+            $this->signatureDates
         );
     }
 
@@ -105,13 +107,14 @@ class Signer
             $message,
             $this->key,
             $this->algorithm,
-            $this->headerList
+            $this->headerList,
+            $this->signatureDates
         );
     }
 
     public function getSigningString($message)
     {
-        $singingString = new SigningString($this->headerList, $message);
+        $singingString = new SigningString($this->headerList, $message, $this->signatureDates);
 
         return $singingString->string();
     }
