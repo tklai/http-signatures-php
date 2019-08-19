@@ -297,13 +297,17 @@ class HmacContextTest extends TestCase
         $algorithmsContext = new Context([
             'keys' => ['pda' => 'secret'],
             'algorithm' => 'hs2019',
-            'headers' => ['(request-target)', 'date'],
+            'headers' => ['(request-target)', '(created)'],
         ]);
+        $algorithmsContext->setCreated(1566254000);
         $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
         $this->assertEquals(
-          'keyId="pda",algorithm="hs2019",headers="(request-target) date",'.
-          'signature="0mFj7Fau0KQQIfSnPm651QEDlPpi40SaAt8TmowgpUFuavp3RQ2dXqHO'.
-          'iZLcDTt7H84ZLfJty4lbtEEb64Sfxg=="',
+          'keyId="pda",'.
+          'algorithm="hs2019",'.
+          'created=1566254000,'.
+          'headers="(request-target) (created)",'.
+          'signature="g9QBrm67MkUaYwESkfqsXtmWnvrFWI723TLgQ6CuKFu+7mzP62xYQob'.
+          'PTyttOoAhhR/AvufL9AlFJViMGhDGmg=="',
           $signatureLine
         );
     }
