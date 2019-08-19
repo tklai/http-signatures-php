@@ -10,11 +10,13 @@ class KeyStore implements KeyStoreInterface
     /**
      * @param array $keys
      */
-    public function __construct($keys)
+    public function __construct($keys = [])
     {
         $this->keys = [];
-        foreach ($keys as $id => $key) {
-            $this->keys[$id] = new Key($id, $key);
+        if (!empty($keys)) {
+            foreach ($keys as $id => $key) {
+                $this->keys[$id] = new Key($id, $key);
+            }
         }
     }
 
@@ -25,8 +27,11 @@ class KeyStore implements KeyStoreInterface
      *
      * @throws KeyStoreException
      */
-    public function fetch($keyId)
+    public function fetch($keyId = null)
     {
+        if (empty($keyId) && 1 == sizeof($this->keys)) {
+            return reset($this->keys);
+        }
         if (isset($this->keys[$keyId])) {
             return $this->keys[$keyId];
         } else {
