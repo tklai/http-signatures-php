@@ -19,6 +19,12 @@ class Context
     /** @var string */
     private $hashAlgorithm;
 
+    /** @var string */
+    private $defaultCreated = 'now';
+
+    /** @var string */
+    private $defaultExpires = 'none';
+
     /**
      * @param array $args
      *
@@ -38,10 +44,12 @@ class Context
         // algorithm for signing; not necessary for verifying.
         if (isset($args['algorithm'])) {
             $this->setAlgorithm($args['algorithm']);
-            // $this->algorithm = Algorithm::create($args['algorithm']);
+        } else {
+            $this->setAlgorithm('hs2019');
         }
 
         // TODO: Read headers as minimum for verification
+        // TODO: Function to set headers after creation
         // headers list for signing; not necessary for verifying.
         if (isset($args['headers'])) {
             $this->headers = $args['headers'];
@@ -116,7 +124,8 @@ class Context
         return new Signer(
             $this->signingKey(),
             $algorithm,
-            $this->headerList()
+            $this->headerList(),
+            $this->signatureDates()
       );
     }
 
@@ -154,7 +163,11 @@ class Context
         if (!is_null($this->headers)) {
             return new HeaderList($this->headers, true);
         } else {
-            return new HeaderList(['date'], false);
+            if (in_array($this->hashAlgorithm, ['hs2019'])) {
+                return new HeaderList(['(created)'], false);
+            } else {
+                return new HeaderList(['date'], false);
+            }
         }
     }
 
@@ -232,5 +245,24 @@ class Context
         }
 
         $this->keyStore->addKeys($value);
+    }
+
+    public function setCreated($created)
+    {
+        $this->defaultCreated = $created;
+    }
+
+    public function setExpires($expires)
+    {
+        $this->defaultexpires = $expires;
+    }
+
+    public function signatureDates()
+    {
+        $signatureDates = new SignatureDates();
+        $signatureDates->setCreated(SignatureDates::Offset($this->defaultCreated));
+        $signatureDates->setExpires(SignatureDates::Offset($this->defaultExpires));
+
+        return $signatureDates;
     }
 }
