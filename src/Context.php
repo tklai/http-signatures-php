@@ -254,15 +254,24 @@ class Context
 
     public function setExpires($expires)
     {
-        $this->defaultexpires = $expires;
+        $this->defaultExpires = $expires;
     }
 
     public function signatureDates()
     {
         $signatureDates = new SignatureDates();
         $signatureDates->setCreated(SignatureDates::Offset($this->defaultCreated));
-        $signatureDates->setExpires(SignatureDates::Offset($this->defaultExpires));
+        $signatureDates->setExpires(SignatureDates::Offset($this->defaultExpires, $signatureDates->getCreated()));
 
         return $signatureDates;
+    }
+
+    public function setHeaders($headers)
+    {
+        if (is_array($headers)) {
+            $this->headers = $headers;
+        } else {
+            $this->headers = explode(' ', $headers);
+        }
     }
 }
