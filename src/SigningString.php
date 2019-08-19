@@ -12,14 +12,19 @@ class SigningString
     /** @var RequestInterface */
     private $message;
 
+    /** @var SignatureDates */
+    private $signatureDates;
+
+    // TODO: Make signatureDates mandatory
     /**
      * @param HeaderList       $headerList
      * @param RequestInterface $message
      */
-    public function __construct(HeaderList $headerList, $message)
+    public function __construct(HeaderList $headerList, $message, $signatureDates = null)
     {
         $this->headerList = $headerList;
         $this->message = $message;
+        $this->signatureDates = $signatureDates;
     }
 
     /**
@@ -35,14 +40,14 @@ class SigningString
      */
     private function lines()
     {
-        if (is_null($this->headerList->names)) {
-            return [];
-        } else {
-            return array_map(
-              [$this, 'line'],
-              $this->headerList->names
-          );
+        $lines = [];
+        if (!is_null($this->headerList->names)) {
+            foreach ($this->headerList->names as $name) {
+                $lines[] = $this->line($name);
+            }
         }
+
+        return $lines;
     }
 
     /**
@@ -57,7 +62,15 @@ class SigningString
         if (preg_match('/^\(.*\)$/', $name)) {
             switch ($name) {
             case '(request-target)':
-            return $this->requestTargetLine();
+              return sprintf('%s: %s', $name, $this->requestTarget());
+              break;
+
+            case '(created)':
+              return sprintf('%s: %s', $name, $this->signatureDates->getCreated());
+              break;
+
+            case '(expires)':
+              return sprintf('%s: %s', $name, $this->signatureDates->getExpires());
               break;
 
             default:
@@ -100,10 +113,10 @@ class SigningString
     /**
      * @return string
      */
-    private function requestTargetLine()
+    private function requestTarget()
     {
         return sprintf(
-            '(request-target): %s %s',
+            '%s %s',
             strtolower($this->message->getMethod()),
             $this->message->getRequestTarget()
         );
