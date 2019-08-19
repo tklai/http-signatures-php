@@ -78,7 +78,7 @@ class Context
      *
      * @throws Exception
      */
-    public function signer()
+    public function signer($strictDates = true)
     {
         try {
             $signingKey = $this->signingKey();
@@ -125,7 +125,7 @@ class Context
             $this->signingKey(),
             $algorithm,
             $this->headerList(),
-            $this->signatureDates()
+            $this->signatureDates($strictDates)
       );
     }
 
@@ -145,7 +145,7 @@ class Context
      */
     private function signingKey()
     {
-        if (empty($this->signingKeyId) && 1 == $this->keyStore()->count()) {
+        if (empty($this->signingKeyId) && (1 == $this->keyStore()->count())) {
             $this->signingKeyId = $this->keyStore()->fetch()->getId();
         }
         if (isset($this->signingKeyId)) {
@@ -257,11 +257,21 @@ class Context
         $this->defaultExpires = $expires;
     }
 
-    public function signatureDates()
+    public function signatureDates($strict = true)
     {
         $signatureDates = new SignatureDates();
         $signatureDates->setCreated(SignatureDates::Offset($this->defaultCreated));
         $signatureDates->setExpires(SignatureDates::Offset($this->defaultExpires, $signatureDates->getCreated()));
+        if ($strict) {
+            if ((time() - $signatureDates->getCreated()) < 0) {
+                throw new SignatureDatesException("Cannot sign a message with 'created' in the future: ".time().','.$signatureDates->getCreated(), 1);
+            }
+            if (!empty($signatureDates->getExpires())) {
+                if (($signatureDates->getExpires() - time()) < 0) {
+                    throw new SignatureDatesException("Cannot sign a message with 'expires' in the past: ".time().','.$signatureDates->getExpires(), 1);
+                }
+            }
+        }
 
         return $signatureDates;
     }

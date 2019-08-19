@@ -5,6 +5,7 @@ namespace HttpSignatures\tests;
 use GuzzleHttp\Psr7\Request;
 use HttpSignatures\Context;
 use HttpSignatures\ContextException;
+use HttpSignatures\SignatureDatesException;
 use HttpSignatures\Tests\TestKeys;
 use PHPUnit\Framework\TestCase;
 
@@ -43,7 +44,7 @@ class ContextTest extends TestCase
         $defaultContext = new Context();
         $defaultContext->addKeys($this->signingKeySpec);
         $defaultContext->setCreated(1566239000);
-        $dates = $defaultContext->signatureDates();
+        $dates = $defaultContext->signatureDates(false);
         $this->assertEquals(
           [1566239000, null],
           [$dates->getCreated(), $dates->getExpires()]
@@ -71,15 +72,14 @@ class ContextTest extends TestCase
             $signedMessage->getHeader('Signature')[0]
         );
         $defaultContext->setExpires('+300');
-        $defaultContext->setExpires('+300');
-        $dates = $defaultContext->signatureDates();
+        $dates = $defaultContext->signatureDates(false);
         $this->assertEquals(
           [1566239000, 1566239300],
           [$dates->getCreated(), $dates->getExpires()]
         );
         $defaultContext->setHeaders([
           '(request-target)', '(created)', '(expires)', ]);
-        $signer = $defaultContext->signer();
+        $signer = $defaultContext->signer(false);
         $signedMessage = $signer->sign($this->message);
         $this->assertEquals(
             implode("\n", [
@@ -109,8 +109,9 @@ class ContextTest extends TestCase
 
     public function testv10SigningContext()
     {
-        $this->signingContext->addKeys($this->signingKeySpec);
-        $signer = $this->signingContext->signer();
+        $v10Context = $this->signingContext;
+        $v10Context->addKeys($this->signingKeySpec);
+        $signer = $v10Context->signer();
         $signedMessage = $signer->sign($this->message);
 
         $expectedSignatureLine = implode(',', [
@@ -225,5 +226,23 @@ class ContextTest extends TestCase
               'algorithm' => 'rsa-sha224',
               'headers' => ['(request-target)', 'date'],
           ]);
+    }
+
+    public function testRejectCreatedInFuture()
+    {
+        $defaultContext = new Context();
+        $defaultContext->addKeys($this->signingKeySpec);
+        $defaultContext->setCreated('+100');
+        $this->expectException(SignatureDatesException::class);
+        $signer = $defaultContext->signer();
+    }
+
+    public function testRejectExpiresInPast()
+    {
+        $defaultContext = new Context();
+        $defaultContext->addKeys($this->signingKeySpec);
+        $defaultContext->setExpires('-300');
+        $this->expectException(SignatureDatesException::class);
+        $signer = $defaultContext->signer();
     }
 }
