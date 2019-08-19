@@ -62,4 +62,9 @@ class HeaderList
     {
         return strtolower($name);
     }
+
+    public function list()
+    {
+        return $this->names;
+    }
 }
