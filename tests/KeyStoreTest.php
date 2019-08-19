@@ -3,6 +3,7 @@
 namespace HttpSignatures\tests;
 
 use HttpSignatures\KeyStore;
+use HttpSignatures\KeyStoreException;
 use PHPUnit\Framework\TestCase;
 
 class KeyStoreTest extends TestCase
@@ -28,6 +29,7 @@ class KeyStoreTest extends TestCase
           'secret-key',
           $this->ks->fetch('another')->getSigningKey()
         );
+        $this->expectException(KeyStoreException::class);
         $this->ks->addKeys(['another' => 'duplicate']);
     }
 
