@@ -44,10 +44,11 @@ while ( sizeof($argv) > 0 ) {
   switch ($argv[0]) {
     case '--headers':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
+        $headers = trim($argv[1]);
         if ( $argv[1] == "" ) {
           $headers = [];
         } else {
-          $headers = explode(' ',$argv[1]);
+          $headers = explode(' ',$headers);
         };
         array_shift($argv);
       } else {
@@ -75,7 +76,7 @@ while ( sizeof($argv) > 0 ) {
 
     case '--algorithm':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['algorithm'] = $argv[1];
+        $algorithm = $argv[1];
         array_shift($argv);
       } else {
         print "No value provided for parameter --algorithm"; exit(3);
@@ -152,9 +153,6 @@ if (substr($body[0],0,6) == 'Date: ') {
   $body=implode("\n",$body);
   $message = $message->withBody($psr17Factory->createStream($body));
 }
-// var_dump(['input' => $input,'dates' => $message->getHeader('Date'),'body' => $body]); exit;
-// $headerList = new HeaderList($headers);
-// $ss = new SigningString($headerList, $message);
 function runTest($mode, $message, $key, $headers, $created, $expires) {
   $context = New Context();
   switch ($mode) {
@@ -168,12 +166,12 @@ function runTest($mode, $message, $key, $headers, $created, $expires) {
       break;
 
     case 'sign':
-    $contextParms['keys']['Test'] = $options['privateKey'];
     $contextParms['algorithm'] = $options['algorithm'];
-    // if ( $options['algorithm'] == 'hs2019' ) { print "HI!!!"; }; exit;
     $signContext = new Context();
-    $signedMessage = $defaultContext->signer()->sign($message);
-    return $signedMessage->getHeader('Signature')[0];
+    $signContext->addKeys($key);
+    $signContext->setAlgorithm($algorithm);
+    $signedMessage = $defaultContext->signer()->authorize($message);
+    return $signedMessage->getHeader('Authorization')[0];
 
 
       break;
