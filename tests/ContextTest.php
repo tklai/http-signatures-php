@@ -5,6 +5,7 @@ namespace HttpSignatures\tests;
 use GuzzleHttp\Psr7\Request;
 use HttpSignatures\Context;
 use HttpSignatures\ContextException;
+use HttpSignatures\HeaderException;
 use HttpSignatures\SignatureDatesException;
 use HttpSignatures\Tests\TestKeys;
 use PHPUnit\Framework\TestCase;
@@ -237,6 +238,20 @@ class ContextTest extends TestCase
           '',
           $defaultContext->signer()->getSigningString($this->message)
         );
+        $defaultContext->setHeaders();
+        $this->assertEquals(
+          '(created): '.time(),
+          $defaultContext->signer()->getSigningString($this->message)
+        );
+    }
+
+    public function testRequiredHeaders()
+    {
+        $defaultContext = new Context();
+        $defaultContext->addKeys($this->signingKeySpec);
+        $this->expectException(HeaderException::class);
+        $defaultContext->setHeaders('accept');
+        $signer = $defaultContext->signer();
     }
 
     public function testRejectCreatedInFuture()

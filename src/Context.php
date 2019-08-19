@@ -32,6 +32,12 @@ class Context
      */
     public function __construct($args = [])
     {
+        /*
+         * [$this->newAlgorithmNames Only 'hs2019' for now]
+         * @var array
+         */
+        $this->newAlgorithmNames = ['hs2019'];
+
         if (isset($args['keys']) && isset($args['keyStore'])) {
             throw new Exception(__CLASS__.' accepts keys or keyStore but not both');
         } elseif (isset($args['keys'])) {
@@ -163,7 +169,7 @@ class Context
         if (!is_null($this->headers)) {
             return new HeaderList($this->headers, true);
         } else {
-            if (in_array($this->hashAlgorithm, ['hs2019'])) {
+            if (in_array($this->hashAlgorithm, $this->newAlgorithmNames)) {
                 return new HeaderList(['(created)'], false);
             } else {
                 return new HeaderList(['date'], false);
@@ -194,7 +200,7 @@ class Context
     public function setAlgorithm($name)
     {
         $algorithm = explode('-', $name);
-        if (in_array($name, ['hs2019'])) {
+        if (in_array($name, $this->newAlgorithmNames)) {
             $this->hashAlgorithm = $name;
         } elseif (sizeof($algorithm) < 2) {
             throw new ContextException(
@@ -276,14 +282,20 @@ class Context
         return $signatureDates;
     }
 
-    public function setHeaders($headers)
+    public function setHeaders($headers = null)
     {
-        if (empty($headers)) {
-            $this->headers = [];
+        if (is_null($headers)) {
+            $newHeaders = null;
         } elseif (is_array($headers)) {
-            $this->headers = $headers;
+            $newHeaders = $headers;
         } else {
-            $this->headers = explode(' ', $headers);
+            $newHeaders = explode(' ', $headers);
         }
+        if (in_array($this->hashAlgorithm, $this->newAlgorithmNames)) {
+            if (!is_null($newHeaders) && sizeof($newHeaders) > 0 && !in_array('(created)', $newHeaders)) {
+                throw new HeaderException("Required Signature header '(created)' not included", 1);
+            }
+        }
+        $this->headers = $newHeaders;
     }
 }
