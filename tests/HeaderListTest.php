@@ -18,4 +18,10 @@ class HeaderListTest extends TestCase
         $hl = HeaderList::fromString('(request-target) Accept');
         $this->assertEquals('(request-target) accept', $hl->string());
     }
+
+    public function testList()
+    {
+        $hl = HeaderList::fromString('(request-target) Accept');
+        $this->assertEquals(['(request-target)', 'accept'], $hl->list());
+    }
 }
