@@ -12,7 +12,11 @@ class EcAlgorithm implements AlgorithmInterface
      */
     public function __construct($digestName)
     {
-        $this->digestName = $digestName;
+      if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512'])) {
+          $this->digestName = $digestName;
+      } else {
+          throw new AlgorithmException($digestName.' is not a supported hash format');
+      }
     }
 
     /**
@@ -53,6 +57,10 @@ class EcAlgorithm implements AlgorithmInterface
     private function getEcHashAlgo($digestName)
     {
         switch ($digestName) {
+        case 'sha512':
+            return OPENSSL_ALGO_SHA512;
+        case 'sha384':
+            return OPENSSL_ALGO_SHA384;
         case 'sha256':
             return OPENSSL_ALGO_SHA256;
         case 'sha1':

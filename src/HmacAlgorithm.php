@@ -12,7 +12,11 @@ class HmacAlgorithm implements AlgorithmInterface
      */
     public function __construct($digestName)
     {
-        $this->digestName = $digestName;
+        if (in_array($digestName, ['sha1', 'sha256', 'sha384', 'sha512'])) {
+            $this->digestName = $digestName;
+        } else {
+            throw new AlgorithmException($digestName.' is not a supported hash format');
+        }
     }
 
     /**
