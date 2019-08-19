@@ -49,6 +49,7 @@ while ( sizeof($argv) > 0 ) {
         } else {
           $headers = explode(' ',$argv[1]);
         };
+        array_shift($argv);
       } else {
         $headers = null;
       };
@@ -57,6 +58,7 @@ while ( sizeof($argv) > 0 ) {
     case '--private-key':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
         $privateKeyFile = file_get_contents($argv[1]);
+        array_shift($argv);
       } else {
         print "No value provided for parameter --private-key"; exit(3);
       };
@@ -65,6 +67,7 @@ while ( sizeof($argv) > 0 ) {
     case '--public-key':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
         $publicKeyFile = file_get_contents($argv[1]);
+        array_shift($argv);
       } else {
         print "No value provided for parameter --public-key"; exit(3);
       };
@@ -73,6 +76,7 @@ while ( sizeof($argv) > 0 ) {
     case '--algorithm':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
         $options['algorithm'] = $argv[1];
+        array_shift($argv);
       } else {
         print "No value provided for parameter --algorithm"; exit(3);
       };
@@ -81,6 +85,7 @@ while ( sizeof($argv) > 0 ) {
     case '--key-type':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
         $options['keyType'] = $argv[1];
+        array_shift($argv);
       } else {
         print "No value provided for parameter --key-type"; exit(3);
       };
@@ -94,6 +99,7 @@ while ( sizeof($argv) > 0 ) {
         } elseif (!empty($publicKeyFile)) {
           $key = [$argv[1]=>$publicKeyFile];
         }
+        array_shift($argv);
       } else {
         print "No value provided for parameter --keyId"; exit(3);
       };
@@ -101,7 +107,8 @@ while ( sizeof($argv) > 0 ) {
 
     case '--created':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $created = $argv[1];
+        $created = d($argv[1]);
+        array_shift($argv);
       } else {
         print "No value provided for parameter --created"; exit(3);
       };
@@ -109,7 +116,8 @@ while ( sizeof($argv) > 0 ) {
 
     case '--expires':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $expires = $argv[1];
+        $expires = d($argv[1]);
+        array_shift($argv);
       } else {
         print "No value provided for parameter --expires"; exit(3);
       };
@@ -147,14 +155,12 @@ if (substr($body[0],0,6) == 'Date: ') {
 // var_dump(['input' => $input,'dates' => $message->getHeader('Date'),'body' => $body]); exit;
 // $headerList = new HeaderList($headers);
 // $ss = new SigningString($headerList, $message);
-function runTest($mode, $context, $message, $key, $headers, $created, $expires) {
+function runTest($mode, $message, $key, $headers, $created, $expires) {
+  $context = New Context();
   switch ($mode) {
     case 'canonicalize':
 
-      // $ssContextParms['keys']['Test'] = $privateKey;
-      // $ssContextParms['algorithm'] = 'hmac-sha256';
-      // $ssContextParms['headers'] = $options['headers'];
-      $context->addKeys('test', 'key');
+      $context->addKeys(['test' => 'key']);
       $context->setHeaders($headers);
       $signingString = $context->signer()->getSigningString($message);
       return $signingString;
@@ -194,6 +200,13 @@ function runTest($mode, $context, $message, $key, $headers, $created, $expires) 
     };
 };
 
-$result = runTest($mode, $context, $message, $key, $headers, $created, $expires);
+function d($value)
+{
+  if ($value > 10000000) {
+    $value = $value / 1000;
+  }
+  return round($value);
+}
+$result = runTest($mode, $message, $key, $headers, $created, $expires);
 file_put_contents('./return/' . $fileName,$result);
 print $result;
