@@ -16,6 +16,7 @@ class SigningString
     private $signatureDates;
 
     // TODO: Make signatureDates mandatory
+
     /**
      * @param HeaderList       $headerList
      * @param RequestInterface $message

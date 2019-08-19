@@ -42,16 +42,65 @@ class ContextTest extends TestCase
     {
         $defaultContext = new Context();
         $defaultContext->addKeys($this->signingKeySpec);
+        $defaultContext->setCreated(1566239000);
+        $dates = $defaultContext->signatureDates();
+        $this->assertEquals(
+          [1566239000, null],
+          [$dates->getCreated(), $dates->getExpires()]
+        );
+        $signer = $defaultContext->signer();
+        $this->assertEquals(
+            implode("\n", [
+              '(created): 1566239000',
+            ]),
+            $signer->getSigningString($this->message)
+        );
         $signedMessage = $defaultContext->signer()->sign($this->message);
         $expectedSignatureLine =
             'keyId="rsa1",'.
             'algorithm="hs2019",'.
-            'signature="FM2pgp2riAJ8DYbkkHlxpBAYlsBwn7ItF8NZMhPIHeK3k7fgig4i'.
-            'XZ4WMTrUg97FhzXYOV2mecJz2787vGZ7fmAvhKEyolqZB/TyiTzDWu0WV0+vmEC'.
-            'wGNzfEcoSLLfKEtaG09m3sfSwSkWV/ij4imZmgfbvnxkTM+J9MYQOgqdwyjus6f'.
-            'fSbZmuA8P+3dnm79lost5fpjHbtaTpiIU2T7XZ4xhACy0JrxSBstA9ix52+opdR'.
-            '7PsIUO5r9JwtUFF/r8KObe0TAjCWCAxuolu4ThU5QncHdB5jEtTzTPxR0YYCC/V'.
-            'XE31TLPKkSdcB6RpzBeRTzWjQm5Yk9i3uz2cNw=="';
+            'created=1566239000,'.
+            'signature="Me94a2KUd1+9X8sAFqkHWn8Ze/hz4kREoCbqKn03BTwXd9gcVKMGp6'.
+            'XfpdXalktOTlcNyli0dQlw9kNtU9VeJ1N8/nSj2TY96wQW6p397m6CdYCGJmAqZpf'.
+            '/CzqJFJslp6i7iRB2GJMzbYbCsTVK/oEPlxMB0rMYxosVB2qwaLNsbqobo1FF9L1d'.
+            'I0JE+M2l3Eil9K2Z/TMItRjIlii0a4l3qauxJ8fDOu5uo5mFywrm3oiWrihBBJvI+'.
+            'n4cYmBc+gxByrDDYbH2n2gdKFykHkROdU/N4ic/nV7qycJxLCoWSyZpZp73ilYs4U'.
+            'TZkh9B32LHJNAo/5D7YrKJXmX3NQ=="';
+        $this->assertEquals(
+            $expectedSignatureLine,
+            $signedMessage->getHeader('Signature')[0]
+        );
+        $defaultContext->setExpires('+300');
+        $defaultContext->setExpires('+300');
+        $dates = $defaultContext->signatureDates();
+        $this->assertEquals(
+          [1566239000, 1566239300],
+          [$dates->getCreated(), $dates->getExpires()]
+        );
+        $defaultContext->setHeaders([
+          '(request-target)', '(created)', '(expires)', ]);
+        $signer = $defaultContext->signer();
+        $signedMessage = $signer->sign($this->message);
+        $this->assertEquals(
+            implode("\n", [
+              '(request-target): get /path?query=123',
+              '(created): 1566239000',
+              '(expires): 1566239300',
+            ]),
+            $signer->getSigningString($this->message)
+        );
+        $expectedSignatureLine =
+            'keyId="rsa1",'.
+            'algorithm="hs2019",'.
+            'created=1566239000,'.
+            'expires=1566239300,'.
+            'headers="(request-target) (created) (expires)",'.
+            'signature="Hav9yNOVldI9QzIRUCCP6PeGQ2ji/CtlZ5TWX0VVQ72ZMnch5hpvfj'.
+            '53lDIg9sy14E7FazajttkX/OejwRGhHmlO/x9NGi/2aap8AuBIHXK+7jeP/rXxhf+'.
+            'X2yrsF9Ihp/4DSbsketJinnH16Unrd7BknqTByDvgGIC7bCPeP/dCsAw7taIoVBaF'.
+            'heO7HL1gPADjIjHeD/aZadsITM+HPc+rlNpgeAE3+3OzjUnUtT81LN0aqZHZJEmXh'.
+            'BTHFm1vB2oGm5B/yayZ8KyUbc1z6iVsgAQestu4Y7wSivAnjooFolYKeJeYn6h1hx'.
+            '5qbFVGQ6WF8V8cqrkbSzSfWyUhmg=="';
         $this->assertEquals(
             $expectedSignatureLine,
             $signedMessage->getHeader('Signature')[0]
@@ -62,10 +111,6 @@ class ContextTest extends TestCase
     {
         $this->signingContext->addKeys($this->signingKeySpec);
         $signer = $this->signingContext->signer();
-        // $this->assertEquals(
-        //   1,
-        //   $this->signingContext->signingKey()
-        // );
         $signedMessage = $signer->sign($this->message);
 
         $expectedSignatureLine = implode(',', [
