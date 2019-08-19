@@ -58,7 +58,7 @@ class ContextTest extends TestCase
         );
     }
 
-    public function testv10Signer()
+    public function testv10SigningContext()
     {
         $this->signingContext->addKeys($this->signingKeySpec);
         $signer = $this->signingContext->signer();
