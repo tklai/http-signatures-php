@@ -16,6 +16,9 @@ class Context
     /** @var string */
     private $signingKeyId;
 
+    /** @var string */
+    private $hashAlgorithm;
+
     /**
      * @param array $args
      *
@@ -74,26 +77,34 @@ class Context
         } catch (ContextException $e) {
             throw $e;
         }
-        $hashAlgorithm = $this->hashAlgorithm;
+        if (empty($this->hashAlgorithm)) {
+            $hashAlgorithm = 'hs2019';
+        } else {
+            $hashAlgorithm = $this->hashAlgorithm;
+        }
+        if (empty($this->signatureAlgorithm)) {
+            $signatureAlgorithm = $signingKey->getType();
+        } else {
+            $signatureAlgorithm = $this->signatureAlgorithm;
+        }
         $signingKeyType = $signingKey->getType();
-        if ($signingKeyType != $this->signatureAlgorithm) {
+        if ($signingKeyType != $signatureAlgorithm) {
             throw new ContextException(
               "Signature algorithm '$this->signatureAlgorithm' cannot be ".
               "used with signing key type '$signingKeyType'", 1);
         }
-        // if (empty($algorithm)) {
         switch ($signingKeyType) {
             case 'rsa':
-              $algorithm = new RsaAlgorithm($this->hashAlgorithm);
+              $algorithm = new RsaAlgorithm($hashAlgorithm);
               break;
             case 'dsa':
-              $algorithm = new DsaAlgorithm($this->hashAlgorithm);
+              $algorithm = new DsaAlgorithm($hashAlgorithm);
               break;
             case 'hmac':
-              $algorithm = new HmacAlgorithm($this->hashAlgorithm);
+              $algorithm = new HmacAlgorithm($hashAlgorithm);
               break;
             case 'ec':
-              $algorithm = new EcAlgorithm($this->hashAlgorithm);
+              $algorithm = new EcAlgorithm($hashAlgorithm);
               break;
 
             default:
@@ -101,7 +112,6 @@ class Context
                 "Unrecognised '$signingKeyType'", 1);
               break;
           }
-        // }
 
         return new Signer(
             $this->signingKey(),
@@ -171,8 +181,8 @@ class Context
     public function setAlgorithm($name)
     {
         $algorithm = explode('-', $name);
-        if ('hs2019' == $name) {
-            $this->hashAlgorithm = 'sha512';
+        if (in_array($name, ['hs2019'])) {
+            $this->hashAlgorithm = $name;
         } elseif (sizeof($algorithm) < 2) {
             throw new ContextException(
               "Unrecognised algorithm: '$name'", 1);
