@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../reference/client/formatMessage.php';
-// use \HTTPSignatures\Context;
+use HttpSignatures\Context;
 use HttpSignatures\SigningString;
 use HttpSignatures\HeaderList;
 // if (file_exists('./invocations.json')) {
@@ -26,41 +26,37 @@ foreach ($tmpArgs as $key => $value) {
 };
 $fileName = implode(':',$tmpArgs);
 file_put_contents('./invoke/' . $fileName,$input);
+foreach ($tmpArgs as $key => $value) {
+  if ( strpos($value,'0') ) {
+    $tmpArgs[$key] = '"'.$value.'"';
+  }
+};
 $msgIn = explode("\n",$input);
 $contextParms = [];
 $call=implode(' ',$argv);
-$mode = $argv[0];
 $options = [];
-$options['keyId'] = 'test-key';
+$mode = $argv[0];
+$created = null;
+$expires = null;
 array_shift($argv);
+$context = new Context();
 while ( sizeof($argv) > 0 ) {
   switch ($argv[0]) {
     case '--headers':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $headerAttribute = $argv[1];
-        if ( $headerAttribute == "" ) {
-          $options['headers'] = [];
+        if ( $argv[1] == "" ) {
+          $headers = [];
         } else {
-          $options['headers'] = explode(' ',$argv[1]);
-        // }
-        // if (sizeof($headerList) == 0) {
-        //   $options['headers'] = [];
-        // } else {
-        //   $options['headers'] = $headerList;
+          $headers = explode(' ',$argv[1]);
         };
-        // $options['headers'] = explode(' ',$argv[1]);
-        // if ( $options['headers'] == "" ) {
-        //   $options['headers'] = false;
-        // }
-        array_shift($argv);
       } else {
-        $options['headers'] = [];
+        $headers = null;
       };
       break;
 
     case '--private-key':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['privateKey'] = file_get_contents($argv[1]);
+        $privateKeyFile = file_get_contents($argv[1]);
       } else {
         print "No value provided for parameter --private-key"; exit(3);
       };
@@ -68,7 +64,7 @@ while ( sizeof($argv) > 0 ) {
 
     case '--public-key':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['publicKey'] = file_get_contents($argv[1]);
+        $publicKeyFile = file_get_contents($argv[1]);
       } else {
         print "No value provided for parameter --public-key"; exit(3);
       };
@@ -93,6 +89,11 @@ while ( sizeof($argv) > 0 ) {
     case '--keyId':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
         $options['keyId'] = $argv[1];
+        if (!empty($privateKeyFile)) {
+          $key = [$argv[1]=>$privateKeyFile];
+        } elseif (!empty($publicKeyFile)) {
+          $key = [$argv[1]=>$publicKeyFile];
+        }
       } else {
         print "No value provided for parameter --keyId"; exit(3);
       };
@@ -100,7 +101,7 @@ while ( sizeof($argv) > 0 ) {
 
     case '--created':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['created'] = $argv[1];
+        $created = $argv[1];
       } else {
         print "No value provided for parameter --created"; exit(3);
       };
@@ -108,7 +109,7 @@ while ( sizeof($argv) > 0 ) {
 
     case '--expires':
       if ( sizeof($argv) > 1 && substr($argv[1],0,2) != '--' ) {
-        $options['expires'] = $argv[1];
+        $expires = $argv[1];
       } else {
         print "No value provided for parameter --expires"; exit(3);
       };
@@ -146,16 +147,16 @@ if (substr($body[0],0,6) == 'Date: ') {
 // var_dump(['input' => $input,'dates' => $message->getHeader('Date'),'body' => $body]); exit;
 // $headerList = new HeaderList($headers);
 // $ss = new SigningString($headerList, $message);
-function runTest($mode, $message, $options) {
-  global $privateKey;
+function runTest($mode, $context, $message, $key, $headers, $created, $expires) {
   switch ($mode) {
     case 'canonicalize':
 
-      $ssContextParms['keys']['Test'] = $privateKey;
+      // $ssContextParms['keys']['Test'] = $privateKey;
       // $ssContextParms['algorithm'] = 'hmac-sha256';
-      $ssContextParms['headers'] = $options['headers'];
-      $ssContext = new \HttpSignatures\Context($ssContextParms);
-      $signingString = $ssContext->signer()->getSigningString($message);
+      // $ssContextParms['headers'] = $options['headers'];
+      $context->addKeys('test', 'key');
+      $context->setHeaders($headers);
+      $signingString = $context->signer()->getSigningString($message);
       return $signingString;
 
       break;
@@ -164,7 +165,7 @@ function runTest($mode, $message, $options) {
     $contextParms['keys']['Test'] = $options['privateKey'];
     $contextParms['algorithm'] = $options['algorithm'];
     // if ( $options['algorithm'] == 'hs2019' ) { print "HI!!!"; }; exit;
-    $defaultContext = new \HttpSignatures\Context($contextParms);
+    $signContext = new Context();
     $signedMessage = $defaultContext->signer()->sign($message);
     return $signedMessage->getHeader('Signature')[0];
 
@@ -172,13 +173,17 @@ function runTest($mode, $message, $options) {
       break;
 
     case 'verify':
-      $keyStore = new \HttpSignatures\KeyStore([$options['keyId'] => $options['publicKey']]);
-      $verifier = new \HttpSignatures\Verifier($keyStore);
+      // $verfyingKey = new Key[$options['keyId'] => $options['publicKey']];
+      // $keyStore = new \HttpSignatures\KeyStore([$options['keyId'] => $options['publicKey']]);
+      $verifier = new \HttpSignatures\Verifier();
+      $verifier->addKey($options['keyId'], $options['publicKey']);
       $result = $verifier->isAuthorized($message);
       if ( $result) {
         exit(0);
       } else {
-        throw new \Exception($options['keyId'] . ': ' . $message->getHeader('Authorization')[0] . $options['publicKey'], 1);
+        throw new \Exception(
+          implode(' ',$tmpArgs).PHP_EOL.
+          $options['keyId'] . ': ' . $message->getHeader('Authorization')[0] . $options['publicKey'], 1);
 
         exit(5);
       }
@@ -189,6 +194,6 @@ function runTest($mode, $message, $options) {
     };
 };
 
-$result = runTest($mode, $message, $options, $headerAttribute);
+$result = runTest($mode, $context, $message, $key, $headers, $created, $expires);
 file_put_contents('./return/' . $fileName,$result);
 print $result;
