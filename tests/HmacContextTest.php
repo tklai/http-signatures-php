@@ -241,4 +241,70 @@ class HmacContextTest extends TestCase
             $message->getHeader('Signature')[0]
         );
     }
+
+    public function testSignHashAlgorithms()
+    {
+        $message = new Request(
+          'GET', '/path?query=123',
+          ['date' => 'today', 'accept' => 'llamas']
+        );
+        $algorithmsContext = new Context([
+            'keys' => ['pda' => 'secret'],
+            'algorithm' => 'hmac-sha1',
+            'headers' => ['(request-target)', 'date'],
+        ]);
+        $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
+        $this->assertEquals(
+          'keyId="pda",algorithm="hmac-sha1",headers="(request-target) date",'.
+          'signature="LhHzf9kLUSTzQXqApn6PEfcemck="',
+          $signatureLine
+        );
+        $algorithmsContext = new Context([
+            'keys' => ['pda' => 'secret'],
+            'algorithm' => 'hmac-sha256',
+            'headers' => ['(request-target)', 'date'],
+        ]);
+        $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
+        $this->assertEquals(
+          'keyId="pda",algorithm="hmac-sha256",headers="(request-target) date",'.
+          'signature="SFlytCGpsqb/9qYaKCQklGDvwgmrwfIERFnwt+yqPJw="',
+          $signatureLine
+        );
+        $algorithmsContext = new Context([
+            'keys' => ['pda' => 'secret'],
+            'algorithm' => 'hmac-sha384',
+            'headers' => ['(request-target)', 'date'],
+        ]);
+        $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
+        $this->assertEquals(
+          'keyId="pda",algorithm="hmac-sha384",headers="(request-target) date",'.
+          'signature="xzcM2jy8EPGSoOqWlCGrYp/BmB5k0aoOfIIH3RzIA+Btl3e3bgIn4VrEE'.
+          'udw36Ij"',
+          $signatureLine
+        );
+        $algorithmsContext = new Context([
+            'keys' => ['pda' => 'secret'],
+            'algorithm' => 'hmac-sha512',
+            'headers' => ['(request-target)', 'date'],
+        ]);
+        $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
+        $this->assertEquals(
+          'keyId="pda",algorithm="hmac-sha512",headers="(request-target) date",'.
+          'signature="0mFj7Fau0KQQIfSnPm651QEDlPpi40SaAt8TmowgpUFuavp3RQ2dXqHOi'.
+          'ZLcDTt7H84ZLfJty4lbtEEb64Sfxg=="',
+          $signatureLine
+        );
+        $algorithmsContext = new Context([
+            'keys' => ['pda' => 'secret'],
+            'algorithm' => 'hs2019',
+            'headers' => ['(request-target)', 'date'],
+        ]);
+        $signatureLine = $algorithmsContext->signer()->sign($message)->getHeader('Signature')[0];
+        $this->assertEquals(
+          'keyId="pda",algorithm="hs2019",headers="(request-target) date",'.
+          'signature="0mFj7Fau0KQQIfSnPm651QEDlPpi40SaAt8TmowgpUFuavp3RQ2dXqHO'.
+          'iZLcDTt7H84ZLfJty4lbtEEb64Sfxg=="',
+          $signatureLine
+        );
+    }
 }
