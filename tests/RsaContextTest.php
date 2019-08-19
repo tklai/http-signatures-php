@@ -92,16 +92,6 @@ class RsaContextTest extends TestCase
         );
     }
 
-    public function testRsaBadalgorithm()
-    {
-        $this->expectException(\HTTPSignatures\AlgorithmException::class);
-        $sha224context = new Context([
-              'keys' => ['rsa1' => TestKeys::rsaPrivateKey],
-              'algorithm' => 'rsa-sha224',
-              'headers' => ['(request-target)', 'date'],
-          ]);
-    }
-
     public function testEmptyHeaders()
     {
         $emptyHeadersContext = new Context([
