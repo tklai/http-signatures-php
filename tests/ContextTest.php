@@ -233,27 +233,39 @@ class ContextTest extends TestCase
     {
         $defaultContext = new Context();
         $defaultContext->addKeys($this->signingKeySpec);
-        $defaultContext->setHeaders([]);
-        $this->assertEquals(
-          '',
-          $defaultContext->signer()->getSigningString($this->message)
-        );
         $defaultContext->setHeaders();
         $this->assertEquals(
           '(created): '.time(),
           $defaultContext->signer()->getSigningString($this->message)
         );
+        $defaultContext->setHeaders([]);
+        $defaultContext->setCreated(12345);
+        $this->assertEquals(
+          '',
+          $defaultContext->signer()->getSigningString($this->message)
+        );
     }
 
-    public function testRequiredHeaders()
+    public function testBasicHeaders()
     {
         $defaultContext = new Context();
         $defaultContext->addKeys($this->signingKeySpec);
-        $this->expectException(HeaderException::class);
-        $defaultContext->setHeaders('accept');
-        $signer = $defaultContext->signer();
+        $defaultContext->setHeaders(['date']);
+        $this->assertEquals(
+          'date: today',
+          $defaultContext->signer()->getSigningString($this->message)
+        );
     }
 
+    // public function testRequiredHeaders()
+    // {
+    //     $defaultContext = new Context();
+    //     $defaultContext->addKeys($this->signingKeySpec);
+    //     $this->expectException(HeaderException::class);
+    //     $defaultContext->setHeaders('accept');
+    //     $signer = $defaultContext->signer();
+    // }
+    //
     public function testRejectCreatedInFuture()
     {
         $defaultContext = new Context();
