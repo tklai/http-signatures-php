@@ -15,14 +15,13 @@ class HeaderList
      */
     public function __construct(array $names, $headerListSpecified = true)
     {
+        $this->names = [];
         if (!$names) {
-            $names = ['date'];
             $this->headerListSpecified = false;
         } else {
-            $this->names = array_map(
-              [$this, 'normalize'],
-              $names
-          );
+            foreach ($names as $name) {
+                $this->names[] = strtolower($name);
+            }
             $this->headerListSpecified = $headerListSpecified;
         }
     }
@@ -42,7 +41,11 @@ class HeaderList
      */
     public function string()
     {
-        return implode(' ', $this->names);
+        if (sizeof($this->names)) {
+            return implode(' ', $this->names);
+        } else {
+            return '';
+        }
     }
 
     /**
