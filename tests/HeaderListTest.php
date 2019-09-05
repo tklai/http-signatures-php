@@ -13,6 +13,14 @@ class HeaderListTest extends TestCase
         $this->assertEquals('(request-target) date', $hl->string());
     }
 
+    public function testEmpty()
+    {
+        $hl = HeaderList::fromString('');
+        $this->assertEquals('', $hl->string());
+        $hl = new HeaderList([]);
+        $this->assertEquals('', $hl->string());
+    }
+
     public function testFromStringRoundTripNormalized()
     {
         $hl = HeaderList::fromString('(request-target) Accept');
