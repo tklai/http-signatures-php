@@ -199,6 +199,9 @@ class Context
 
     public function setAlgorithm($name)
     {
+        if (empty($algorithm) || $name == '') {
+            $name = 'hs2019';
+        }
         $algorithm = explode('-', $name);
         if (in_array($name, $this->newAlgorithmNames)) {
             $this->hashAlgorithm = $name;
@@ -291,11 +294,11 @@ class Context
         } else {
             $newHeaders = explode(' ', $headers);
         }
-        if (in_array($this->hashAlgorithm, $this->newAlgorithmNames)) {
-            if (!is_null($newHeaders) && sizeof($newHeaders) > 0 && !in_array('(created)', $newHeaders)) {
-                throw new HeaderException("Required Signature header '(created)' not included", 1);
-            }
-        }
+        // if (in_array($this->hashAlgorithm, $this->newAlgorithmNames)) {
+        //     if (!is_null($newHeaders) && sizeof($newHeaders) > 0 && !in_array('(created)', $newHeaders)) {
+        //         throw new HeaderException("Required Signature header '(created)' not included", 1);
+        //     }
+        // }
         $this->headers = $newHeaders;
     }
 }
