@@ -17,13 +17,16 @@ class Context
     private $signingKeyId;
 
     /** @var string */
-    private $hashAlgorithm;
-
-    /** @var string */
     private $defaultCreated = 'now';
 
     /** @var string */
     private $defaultExpires = 'none';
+
+    /** @var string */
+    private $signatureAlgorithm;
+
+    /** @var string */
+    private $hashAlgorithm;
 
     /**
      * @param array $args
@@ -199,9 +202,10 @@ class Context
 
     public function setAlgorithm($name)
     {
-        if (empty($algorithm) || $name == '') {
+        if (empty($name)) {
             $name = 'hs2019';
         }
+
         $algorithm = explode('-', $name);
         if (in_array($name, $this->newAlgorithmNames)) {
             $this->hashAlgorithm = $name;
