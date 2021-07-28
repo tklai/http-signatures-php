@@ -51,7 +51,7 @@ class BodyDigest
 
     public function putDigestInHeaderList($headerList)
     {
-        if (!array_search('digest', $headerList->names)) {
+        if (array_search('digest', $headerList->names) === false) {
             $headerList->names[] = 'digest';
         }
 
